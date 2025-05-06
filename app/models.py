@@ -2,6 +2,9 @@
 
 from sqlalchemy import Column, Integer, String, Date
 from app.database import Base
+from sqlalchemy.orm import declarative_base
+
+Base = declarative_base()
 
 
 class JobApplication(Base):
@@ -10,6 +13,7 @@ class JobApplication(Base):
     id = Column(Integer, primary_key=True, index=True)
     company = Column(String, index=True)
     position = Column(String)
+    location = Column(String, nullable=True)
     status = Column(String)  # e.g. applied, interviewed, rejected, offer
     applied_date = Column(Date)
     link = Column(String, nullable=True)
