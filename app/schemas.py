@@ -7,6 +7,7 @@ from typing import Optional
 class JobAppBase(BaseModel):
     company: str
     position: str
+    location: Optional[str] = None
     status: str
     applied_date: date
     link: Optional[str] = None
