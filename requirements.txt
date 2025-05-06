@@ -1,5 +1,7 @@
-fastapi
+fastapi~=0.115.12
 uvicorn
-sqlalchemy
-pydantic
+sqlalchemy~=2.0.40
+pydantic~=2.11.4
 
+
+alembic~=1.15.2
