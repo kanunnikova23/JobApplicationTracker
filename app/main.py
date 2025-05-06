@@ -9,3 +9,8 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 app.include_router(job_applications.router)
+
+
+@app.get("/")
+def read_root():
+    return {"message": "Job Application Tracker is up and running 🚀"}

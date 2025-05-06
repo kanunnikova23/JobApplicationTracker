@@ -2,3 +2,6 @@
 __pycache__/
 .idea/
 *.pyc
+/.flake8
+/job_applications.db
+/alembic.ini
