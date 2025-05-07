@@ -1,7 +1,6 @@
 # Maps DB to tables.
 
 from sqlalchemy import Column, Integer, String, Date
-from app.database import Base
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
