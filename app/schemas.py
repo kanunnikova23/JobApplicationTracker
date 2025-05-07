@@ -24,3 +24,7 @@ class JobApp(JobAppBase):
     model_config = {
         "from_attributes": True
     }
+
+
+class JobAppUpdate:
+    pass
