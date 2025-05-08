@@ -37,4 +37,11 @@ class JobApp(JobAppBase):
 # This lets the user update only one field
 # without sending the whole object.
 class JobAppUpdate:
-    pass
+    company: Optional[str] = None,
+    position: Optional[str] = None
+    location: Optional[str] = None
+    status: Optional[str] = None
+    applied_date: Optional[date] = None
+    link: Optional[str] = None
+    notes: Optional[str] = None
+
