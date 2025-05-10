@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from datetime import date
 from typing import Optional
 
+
 # Schema  which maps to DB model, minus the id.
 # shared base for create + response, reused in other schemas
 class JobAppBase(BaseModel):
@@ -44,4 +45,3 @@ class JobAppUpdate:
     applied_date: Optional[date] = None
     link: Optional[str] = None
     notes: Optional[str] = None
-

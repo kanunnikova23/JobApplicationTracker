@@ -10,6 +10,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 # Handle creating a new row in the job_applications table.
 def create_job_app(db: Session, job: schemas.JobAppCreate):
     db_job = models.JobApplication(**job.dict())
