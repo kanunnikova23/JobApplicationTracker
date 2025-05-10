@@ -14,16 +14,14 @@ from app.models import Base
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-
 # NEW: Load variables from .env file in root dir
 load_dotenv()
 
 # this is the Alembic Config object
 config = context.config
 
-# OVERRIDE: Set SQLAlchemy URL from env variable
-db_url = os.getenv("DB_URL", "sqlite:///./job_applications.db")  # fallback to sqlite
-config.set_main_option("sqlalchemy.url", db_url)
+# 🔥 Set DB_URL dynamically from .env
+config.set_main_option("sqlalchemy.url", os.getenv("DB_URL"))
 
 # Set up loggers
 if config.config_file_name is not None:
