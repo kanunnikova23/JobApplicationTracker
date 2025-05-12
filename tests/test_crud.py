@@ -1,6 +1,7 @@
 # unit tests for database logic
 # CRUD Logic (No FastAPI involved)
-from app import crud, schemas
+from app import schemas
+from app.crud import job_crud
 
 
 def test_create_job_app(db):

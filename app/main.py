@@ -1,8 +1,8 @@
 # Starts the app. Registers routes.
 from fastapi import FastAPI
 from app import models
-from app.database import engine
-from app.routes import job_applications
+from app.db.database import engine
+from app.api.routes import job_routes
 
 # Creates all tables in the DB based on models if they don’t exist.
 models.Base.metadata.create_all(bind=engine)
