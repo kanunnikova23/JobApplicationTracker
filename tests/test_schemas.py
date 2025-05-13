@@ -1,6 +1,6 @@
 # Schema validation tests - Edge Cases
 
-from app.schemas import JobAppCreate
+from app.schemas.job_schemas import JobAppCreate
 import pytest
 from datetime import date
 

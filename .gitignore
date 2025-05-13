@@ -13,3 +13,5 @@ job_applications.db
 
 # Linting config
 .flake8
+
+/.env

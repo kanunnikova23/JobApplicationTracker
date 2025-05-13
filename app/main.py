@@ -1,17 +1,16 @@
 # Starts the app. Registers routes.
+from app import app
 from fastapi import FastAPI
-from app import models
-from app.database import engine
-from app.routes import job_applications
+from app.api.routes import job_routes
+from app.db.database import engine
+from app.models import job_models
+
 
 # Creates all tables in the DB based on models if they don’t exist.
-models.Base.metadata.create_all(bind=engine)
-
-# initialize the FastAPI app instance.
-app = FastAPI()
+job_models.Base.metadata.create_all(bind=engine)
 
 # register job_applications API router to the main app.
-app.include_router(job_applications.router)
+app.include_router(job_routes.router)
 
 
 # decorator which defines the route for HTTP GET method at the root path
