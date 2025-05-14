@@ -1,6 +1,5 @@
 # Starts the app. Registers routes.
 from app import app
-from fastapi import FastAPI
 from app.api.routes import job_routes
 from app.db.database import engine
 from app.models import job_models
