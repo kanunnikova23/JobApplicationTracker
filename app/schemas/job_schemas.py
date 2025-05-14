@@ -6,10 +6,10 @@
 from pydantic import BaseModel, AnyUrl, Field
 from datetime import date
 from typing import Optional
-from enum import Enum
+from enum import Enum as PyEnum
 
 
-class ApplicationStatus(str, Enum):
+class ApplicationStatus(str, PyEnum):
     APPLIED = "applied"
     INTERVIEWING = "interviewing"
     OFFERED = "offered"
