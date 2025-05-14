@@ -13,7 +13,11 @@ logger = logging.getLogger(__name__)
 
 # Handle creating a new row in the job_applications table.
 def create_job_app(db: Session, job: schemas.JobAppCreate):
-    db_job = models.JobApplication(**job.dict())
+    job_data_dict = job.dict()
+    if job_data_dict["link"] is not None:
+        job_data_dict["link"] = str(job_data_dict["link"])
+
+    db_job = models.JobApplication(**job_data_dict)
     db.add(db_job)
     db.commit()
     db.refresh(db_job)

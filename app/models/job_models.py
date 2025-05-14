@@ -4,6 +4,8 @@
 
 from sqlalchemy import Column, Integer, String, Date
 from app.db.database import Base
+from app.schemas.job_schemas import ApplicationStatus
+from sqlalchemy import Enum as SQLEnum
 
 
 class JobApplication(Base):
@@ -11,10 +13,10 @@ class JobApplication(Base):
     # primary key column
     id = Column(Integer, primary_key=True, index=True)
     # other columns
-    company = Column(String, index=True)
-    position = Column(String)
-    location = Column(String, nullable=True)
-    status = Column(String)  # e.g. applied, interviewed, rejected, offer
-    applied_date = Column(Date)
-    link = Column(String, nullable=True)
-    notes = Column(String, nullable=True)
+    company = Column(String(100), nullable=False)
+    position = Column(String(100), nullable=False)
+    location = Column(String(100), nullable=True)
+    status = Column(SQLEnum(ApplicationStatus, name="application_status"), nullable=True)
+    applied_date = Column(Date, nullable=False)
+    link = Column(String(2048), nullable=True)
+    notes = Column(String(500), nullable=True)
