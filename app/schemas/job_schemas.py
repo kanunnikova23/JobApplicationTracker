@@ -20,13 +20,13 @@ class ApplicationStatus(str, Enum):
 # Schema  which maps to DB model, minus the id.
 # shared base for create + response, reused in other schemas
 class JobAppBase(BaseModel):
-    company: str = Field(..., min_length=1, max_length=100)
-    position: str = Field(..., min_length=1, max_length=100)
-    location: Optional[str] = Field(default=None, max_length=100)
-    status: Optional[ApplicationStatus] = Field(default=None)
-    applied_date: date = Field(...)
-    link: AnyUrl | None = Field(default=None)
-    notes: Optional[str] = Field(default=None, max_length=500)
+    company: str = Field(..., min_length=1, max_length=100, description="Company you applied to")
+    position: str = Field(..., min_length=1, max_length=100, description="Position you applied to")
+    location: Optional[str] = Field(default=None, max_length=100, description="Company you applied to")
+    status: Optional[ApplicationStatus] = Field(default=None, description="Status of your application")
+    applied_date: date = Field(..., description="Date of application")
+    link: AnyUrl | None = Field(default=None, description="Link to the job description")
+    notes: Optional[str] = Field(default=None, max_length=500, description="Additional notes")
 
 
 # Schema for incoming data (POST)
