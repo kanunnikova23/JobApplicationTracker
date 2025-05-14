@@ -3,7 +3,7 @@
 # this file tells FastAPI how data should
 # be shaped for requests (input) and responses (output).
 
-from pydantic import BaseModel, AnyUrl
+from pydantic import BaseModel,AnyUrl
 from datetime import date
 from typing import Optional
 
@@ -16,8 +16,8 @@ class JobAppBase(BaseModel):
     location: Optional[str] = None
     status: str
     applied_date: date
-    link: Optional[str] = None
-    notes: AnyUrl | None = None
+    link: AnyUrl | None = None
+    notes: Optional[str] = None
 
 
 # Schema for incoming data (POST)
