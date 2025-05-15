@@ -6,16 +6,6 @@ from datetime import date
 from app.schemas.job_schemas import ApplicationStatus
 
 
-def test_schema_valid_data():
-    job = JobAppCreate(
-        company="Airbnb",
-        position="SWE",
-        status="applied",
-        applied_date=date.today()
-    )
-    assert job.position == "SWE"
-
-
 def test_valid_job_app_schema():
     job = JobAppCreate(
         company="OpenAI",
@@ -56,5 +46,18 @@ def test_invalid_link():
             status=ApplicationStatus.APPLIED,
             applied_date=date.today(),
             link="not-a-valid-url",  # invalid
+            notes="Nice"
+        )
+
+
+def test_invalid_status():
+    with pytest.raises(ValidationError):
+        JobAppCreate(
+            company="Google",
+            position="Engineer",
+            location="Remote",
+            status="Ghosted",  # invalid
+            applied_date=date.today(),
+            link="https://google.com/careers",
             notes="Nice"
         )
