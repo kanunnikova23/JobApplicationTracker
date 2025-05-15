@@ -48,3 +48,16 @@ def test_invalid_link():
             link="not-a-valid-url",  # invalid
             notes="Nice"
         )
+
+
+def test_invalid_status():
+    with pytest.raises(ValidationError):
+        JobAppCreate(
+            company="Google",
+            position="Engineer",
+            location="Remote",
+            status="Ghosted",  # invalid
+            applied_date=date.today(),
+            link="https://google.com/careers",
+            notes="Nice"
+        )
