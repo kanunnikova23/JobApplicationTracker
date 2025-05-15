@@ -3,8 +3,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.db.database import Base
-from app import app
-from fastapi.testclient import TestClient
+from app.main import app
 
 # Use in-memory SQLite DB
 SQLALCHEMY_TEST_DB_URL = "sqlite:///:memory:"
