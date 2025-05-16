@@ -21,3 +21,11 @@ def read_applications(skip: int = 0, limit: int = 10, db: Session = Depends(get_
 def read_jobs_by_id(id: int, db: Session = Depends(get_db)):
     job_app = job_crud.get_job_app_by_id(db, id)
     return job_app
+
+
+@router.put("/{id}", response_model=job_schemas.JobApp)
+def update_jobs_by_id(
+        id: int,
+        db: Session = Depends(get_db),
+        updated_data=job_schemas.JobAppUpdate):
+    return job_crud.update_job(db, id, updated_data)
