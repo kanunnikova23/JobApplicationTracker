@@ -29,3 +29,8 @@ def update_jobs_by_id(
         db: Session = Depends(get_db),
         updated_data=job_schemas.JobAppUpdate):
     return job_crud.update_job(db, id, updated_data)
+
+@router.delete("/{id}", response_model=job_schemas.JobApp)
+def delete_jobs_by_id(id: int, db: Session = Depends(get_db)):
+    job_crud.delete_job(db, id)
+    return {"detail": f"Successfully deleted job ID {id} 💀"}
