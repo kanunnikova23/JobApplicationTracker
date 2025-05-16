@@ -56,3 +56,11 @@ def update_job(db: Session, job_id: int, updated_data: schemas.JobAppUpdate):
     db.refresh(job)
     logger.info(f"✏️ Updated job ID {job_id} with fields: {list(updated_data.dict(exclude_unset=True).keys())}")
     return job
+
+
+def get_job_app_by_id(db: Session, id: int):
+    job = db.query(models.JobApplication).filter(models.JobApplication.id == id).first()
+    if not job:
+        logger.warning(f"⚠️ Tried to find non-existent ID {id}")
+        raise HTTPException(status_code=404, detail="Job wasn't found 💀")
+    return job
