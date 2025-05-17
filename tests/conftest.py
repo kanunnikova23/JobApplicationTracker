@@ -51,9 +51,10 @@ def client(db):  # 👈 db fixture is passed in, so every test gets a fresh sess
     # Patch the app so that all routes now use test DB session
     app.dependency_overrides[get_db] = override_get_db
 
-    with TestClient(app) as c:
-        yield c
-    app.dependency_overrides.clear()
+    with TestClient(app) as c:  #  Simulate HTTP requests
+        yield c  # Provide this test client to the test
+    app.dependency_overrides.clear()  # Reset dependency overrides after test
+
 
 @pytest.fixture(scope="function")
 def sample_applications(db):
