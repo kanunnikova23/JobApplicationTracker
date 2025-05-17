@@ -46,7 +46,7 @@ class JobApp(JobAppBase):
 # For partial updates (PATCH/PUT)
 # This lets the user update only one field
 # without sending the whole object.
-class JobAppUpdate:
+class JobAppUpdate(JobAppBase):
     company: Optional[str] = None,
     position: Optional[str] = None
     location: Optional[str] = None
