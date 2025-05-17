@@ -9,3 +9,11 @@ def test_read_root(client):
 def test_read_applications_route(client):
     response = client.get("/applications/")
     assert response.status_code == 200
+
+
+# This test checks if fetching a specific job application by ID returns correct data
+def test_read_applications_route_with_id(client, sample_applications):
+    response = client.get("/applications/1/")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["company"] == "TestCompany"
