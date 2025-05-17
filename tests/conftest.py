@@ -54,3 +54,20 @@ def client(db):  # 👈 db fixture is passed in, so every test gets a fresh sess
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
+@pytest.fixture(scope="function")
+def sample_applications(db):
+    # Create one fake job application
+    job = JobApplication(
+        company="TestCompany",
+        position="Python Developer",
+        location="Remote",
+        status="applied",
+        applied_date=datetime.date(2025, 1, 1),
+        link="http://example.com",
+        notes="FastAPI FTW"
+    )
+    db.add(job)
+    db.commit()
+    db.refresh(job)  # to get the ID
+    return [job]  # return it so you can use it in your tests if needed
