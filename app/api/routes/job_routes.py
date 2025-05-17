@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Body
 from sqlalchemy.orm import Session
 from app.crud import job_crud
 from app.api.deps import get_db
@@ -26,8 +26,13 @@ def read_jobs_by_id(id: int, db: Session = Depends(get_db)):
 @router.put("/{id}", response_model=job_schemas.JobApp)
 def update_jobs_by_id(
         id: int,
+        # This injects a SQLAlchemy database session using FastAPIs dependency injection system.
         db: Session = Depends(get_db),
-        updated_data=job_schemas.JobAppUpdate):
+        # This is the body of the request, expected to be JSON.
+        # FastAPI will parse it using the JobAppUpdate Pydantic schema.
+        # = Body(...) means this field is required, and will come from the body of the PUT request.
+        updated_data: job_schemas.JobAppUpdate = Body(...),
+):
     return job_crud.update_job(db, id, updated_data)
 
 
