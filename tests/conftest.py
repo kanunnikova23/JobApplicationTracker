@@ -9,9 +9,8 @@ from app.main import app  # 🚀 The actual FastAPI app object being tested
 from app.models.job_models import JobApplication  # import JobApplication model
 import datetime  # Import Python's date class to pass a date object instead of a string
 
-from app.api.deps import get_db
-from app.db.database import Base
-from app.main import app
+# # Use separate SQLite DB for testing separately from prod one
+SQLALCHEMY_TEST_DB_URL = "sqlite:///./test.db"
 
 # Create engine that connects to the test DB
 # "check_same_thread=False" is needed because SQLite is single-threaded by default
