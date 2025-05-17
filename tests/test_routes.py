@@ -17,3 +17,9 @@ def test_read_applications_route_with_id(client, sample_applications):
     assert response.status_code == 200
     data = response.json()
     assert data["company"] == "TestCompany"
+
+
+# This test verifies that requesting a non-existent job application ID returns a 404 error
+def test_access_non_existent_job_id(client):
+    response = client.get("/applications/9999/")
+    assert response.status_code == 404
