@@ -36,7 +36,7 @@ def test_delete_nonexistent_job(db):
 def test_delete_nonexistent_job_endpoint(client):
     response = client.delete("/applications/999")
     assert response.status_code == 404
-    assert response.json() == {"detail": "Not Found"}
+    assert response.json() == {'detail': "Job wasn't found 💀"}
 
 
 def test_feed_schema_invalid_status(db):
