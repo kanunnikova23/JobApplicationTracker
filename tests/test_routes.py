@@ -2,10 +2,12 @@
 from app.models.job_models import JobApplication
 import datetime
 
+
 def test_read_root(client):
     response = client.get("/")
     assert response.status_code == 200
     assert response.json() == {"message": "Job Application Tracker is up and running 🚀"}
+
 
 # This test checks if the /applications/ endpoint returns a successful response
 def test_read_applications_route(client):
@@ -60,3 +62,29 @@ def test_update_job_application_by_id(client, db):
     data = get_response.json()
     assert data["status"] == "interviewing"
     assert data["notes"] == "waiting for reply"
+
+
+# This test verifies the logic of updating job application by the ID
+def test_delete_job_application_by_id(client, db):
+    # Create the original job app in the DB
+    job_app = JobApplication(
+        company="OriginalCo",
+        position="Backend Engineer",
+        location="NYC",
+        status="applied",
+        applied_date=datetime.date(2025, 5, 1),
+        link="http://original.com",
+        notes="initial notes"
+    )
+    db.add(job_app)
+    db.commit()
+    db.refresh(job_app)
+
+    # Send PUT or PATCH request to update the job app
+    response = client.delete(f"/applications/{job_app.id}")
+
+    assert response.status_code == 200
+
+    # Check DB: job should not exist anymore
+    deleted_job = db.query(JobApplication).filter(JobApplication.id == job_app.id).first()
+    assert deleted_job is None
