@@ -1,4 +1,6 @@
 # Route Testing with FastAPIs TestClient
+from app.models.job_models import JobApplication
+import datetime
 
 def test_read_root(client):
     response = client.get("/")
