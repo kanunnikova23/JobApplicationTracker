@@ -29,6 +29,27 @@ def test_access_non_existent_job_id(client):
     assert response.status_code == 404
 
 
+def test_create_job_application(client):
+    new_job = {
+        "company": "OpenAI",
+        "position": "Prompt Engineer",
+        "status": "applied",
+        "applied_date": "2024-05-18",
+        "link": "https://openai.com/careers",
+        "notes": "Excited about LLMs!"
+    }
+
+    response = client.post("/applications/", json=new_job)
+    assert response.status_code == 200, response.text
+
+    data = response.json()
+    assert data["company"] == new_job["company"]
+    assert data["position"] == new_job["position"]
+    assert data["status"] == new_job["status"]
+    assert data["applied_date"] == new_job["applied_date"]
+    isinstance(data["id"], int)
+
+
 # This test verifies the logic of updating job details by the ID
 def test_update_job_application_by_id(client, db):
     # Create the original job app in the DB
