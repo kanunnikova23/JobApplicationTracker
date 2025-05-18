@@ -25,6 +25,14 @@ def test_get_job_apps_empty(db):
     assert apps == []
 
 
+def test_get_job_app_by_id_raises_404(db):
+    # Try to get a job application with an ID that doesn't exist
+    with pytest.raises(HTTPException) as exc_info:
+        job_crud.get_job_app_by_id(db, id=999999)
+    assert exc_info.value.status_code == 404
+    assert "job wasn't found 💀" in exc_info.value.detail.lower()
+
+
 def test_delete_nonexistent_job(db):
     with pytest.raises(HTTPException) as ex_info:
         job_crud.delete_job(db, job_id=99999)
@@ -36,7 +44,22 @@ def test_delete_nonexistent_job(db):
 def test_delete_nonexistent_job_endpoint(client):
     response = client.delete("/applications/999")
     assert response.status_code == 404
-    assert response.json() == {"detail": "Not Found"}
+    assert response.json() == {'detail': "Job wasn't found 💀"}
+
+
+def test_update_nonexistent_job(db):
+    # Create a fake update payload
+    update_info = job_schemas.JobAppUpdate(
+        company="Ghost Corp",
+        position="No code Engineer"
+    )
+
+    # Act & Assert: expect HTTPException with 404
+    with pytest.raises(HTTPException) as exc_info:
+        job_crud.update_job(db, job_id=9999, updated_data=update_info)
+
+    assert exc_info.value.status_code == 404
+    assert "Job wasn't found 💀" in str(exc_info.value.detail)
 
 
 def test_feed_schema_invalid_status(db):

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 # Handle creating a new row in the job_applications table.
 def create_job_app(db: Session, job: schemas.JobAppCreate):
-    job_data_dict = job.dict()
+    job_data_dict = job.model_dump()
     if job_data_dict["link"] is not None:
         job_data_dict["link"] = str(job_data_dict["link"])
 
@@ -42,17 +42,34 @@ def delete_job(db: Session, job_id: int):
     return job
 
 
-# Do partial updates
+# Accepts a DB session, job ID, and partial update data using a Pydantic schema
 def update_job(db: Session, job_id: int, updated_data: schemas.JobAppUpdate):
+    #  Fetch the job entry from the database
     job = db.query(models.JobApplication).filter(models.JobApplication.id == job_id).first()
+
+    #  If it doesn't exist, raise 404
     if not job:
         logger.warning(f"⚠️ Tried to update missing job ID {job_id}")
         raise HTTPException(status_code=404, detail="Job wasn't found 💀")
 
-    for key, value in updated_data.dict(exclude_unset=True).items():
+    #  Update only the fields that were actually passed in the request
+    for key, value in updated_data.model_dump(exclude_unset=True).items():
         setattr(job, key, value)
 
+    #  Save and refresh the changes in the DB
     db.commit()
     db.refresh(job)
-    logger.info(f"✏️ Updated job ID {job_id} with fields: {list(updated_data.dict(exclude_unset=True).keys())}")
+
+    #  Log what got updated
+    logger.info(f"✏️ Updated job ID {job_id} with fields: {list(updated_data.model_dump(exclude_unset=True).keys())}")
+
+    #  Return the fully updated model
+    return job
+
+
+def get_job_app_by_id(db: Session, id: int):
+    job = db.query(models.JobApplication).filter(models.JobApplication.id == id).first()
+    if not job:
+        logger.warning(f"⚠️ Tried to find non-existent ID {id}")
+        raise HTTPException(status_code=404, detail="Job wasn't found 💀")
     return job
