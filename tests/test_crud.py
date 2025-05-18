@@ -25,6 +25,14 @@ def test_get_job_apps_empty(db):
     assert apps == []
 
 
+def test_get_job_app_by_id_raises_404(db):
+    # Try to get a job application with an ID that doesn't exist
+    with pytest.raises(HTTPException) as exc_info:
+        job_crud.get_job_app_by_id(db, id=999999)
+    assert exc_info.value.status_code == 404
+    assert "job wasn't found 💀" in exc_info.value.detail.lower()
+
+
 def test_delete_nonexistent_job(db):
     with pytest.raises(HTTPException) as ex_info:
         job_crud.delete_job(db, job_id=99999)
