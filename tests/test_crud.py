@@ -47,6 +47,21 @@ def test_delete_nonexistent_job_endpoint(client):
     assert response.json() == {'detail': "Job wasn't found 💀"}
 
 
+def test_update_nonexistent_job(db):
+    # Create a fake update payload
+    update_info = job_schemas.JobAppUpdate(
+        company="Ghost Corp",
+        position="No code Engineer"
+    )
+
+    # Act & Assert: expect HTTPException with 404
+    with pytest.raises(HTTPException) as exc_info:
+        job_crud.update_job(db, job_id=9999, updated_data=update_info)
+
+    assert exc_info.value.status_code == 404
+    assert "Job wasn't found 💀" in str(exc_info.value.detail)
+
+
 def test_feed_schema_invalid_status(db):
     with pytest.raises(ValidationError) as ex_info:
         job_schemas.JobAppCreate(
