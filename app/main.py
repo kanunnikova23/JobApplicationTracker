@@ -11,6 +11,7 @@ app = FastAPI()
 # Creates all tables in the DB based on models if they don’t exist.
 job_models.Base.metadata.create_all(bind=engine)
 
+
 @app.get("/")
 def read_root():
     return {"message": "Job Application Tracker is up and running 🚀"}
@@ -18,8 +19,3 @@ def read_root():
 
 # Include the job routes under /applications
 app.include_router(job_routes.router, prefix="/applications", tags=["Applications"])
-
-
-#
-# # register job_applications API router to the main app.
-# app.include_router(job_routes.router)
