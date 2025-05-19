@@ -1,14 +1,11 @@
 # Contains DB logic.
 
 from sqlalchemy.orm import Session
+
 import app.models.job_models as models
 import app.schemas.job_schemas as schemas
-from fastapi import HTTPException
-import logging
-
-# logging important CRUD events
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from app.core.logger import logger
+from app.exceptions import JobApplicationNotFoundException
 
 
 # Handle creating a new row in the job_applications table.
@@ -35,7 +32,7 @@ def delete_job(db: Session, job_id: int):
     job = db.query(models.JobApplication).filter(models.JobApplication.id == job_id).first()
     if not job:
         logger.warning(f"❌ Tried to delete non-existent job ID {job_id}")
-        raise HTTPException(status_code=404, detail="Job wasn't found 💀")
+        raise JobApplicationNotFoundException(job_id)
     db.delete(job)
     db.commit()
     logger.info(f"🗑️ Deleted job ID {job_id}")
@@ -50,7 +47,7 @@ def update_job(db: Session, job_id: int, updated_data: schemas.JobAppUpdate):
     #  If it doesn't exist, raise 404
     if not job:
         logger.warning(f"⚠️ Tried to update missing job ID {job_id}")
-        raise HTTPException(status_code=404, detail="Job wasn't found 💀")
+        raise JobApplicationNotFoundException(job_id)
 
     #  Update only the fields that were actually passed in the request
     for key, value in updated_data.model_dump(exclude_unset=True).items():
@@ -67,9 +64,8 @@ def update_job(db: Session, job_id: int, updated_data: schemas.JobAppUpdate):
     return job
 
 
-def get_job_app_by_id(db: Session, id: int):
-    job = db.query(models.JobApplication).filter(models.JobApplication.id == id).first()
+def get_job_app_by_id(db: Session, job_id: int):
+    job = db.query(models.JobApplication).filter(models.JobApplication.id == job_id).first()
     if not job:
-        logger.warning(f"⚠️ Tried to find non-existent ID {id}")
-        raise HTTPException(status_code=404, detail="Job wasn't found 💀")
+        raise JobApplicationNotFoundException(job_id)
     return job
