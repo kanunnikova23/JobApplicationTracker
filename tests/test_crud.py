@@ -1,11 +1,9 @@
 # unit tests for database logic
 # CRUD Logic (No FastAPI involved)
 import pytest
-from fastapi import HTTPException
-from pydantic import ValidationError
-
 from app.crud import job_crud
 from app.schemas import job_schemas
+from app.exceptions import JobApplicationNotFoundException, ValidationError
 
 
 def test_create_job_app(db):
@@ -26,25 +24,27 @@ def test_get_job_apps_empty(db):
 
 
 def test_get_job_app_by_id_raises_404(db):
+    job_id = 9999
     # Try to get a job application with an ID that doesn't exist
-    with pytest.raises(HTTPException) as exc_info:
-        job_crud.get_job_app_by_id(db, id=999999)
+    with pytest.raises(JobApplicationNotFoundException) as exc_info:
+        job_crud.get_job_app_by_id(db, job_id)
     assert exc_info.value.status_code == 404
-    assert "job wasn't found 💀" in exc_info.value.detail.lower()
+    assert f'Job Application with id {job_id} was not found 💀' in exc_info.value.detail
 
 
 def test_delete_nonexistent_job(db):
-    with pytest.raises(HTTPException) as ex_info:
-        job_crud.delete_job(db, job_id=99999)
+    job_id = 9999
+    with pytest.raises(JobApplicationNotFoundException) as ex_info:
+        job_crud.delete_job(db, job_id)
     assert ex_info.value.status_code == 404
-    assert "Job wasn't found 💀" in str(ex_info.value.detail)
+    assert f'Job Application with id {job_id} was not found 💀' in str(ex_info.value.detail)
 
 
-#integration test
+# integration test
 def test_delete_nonexistent_job_endpoint(client):
     response = client.delete("/applications/999")
     assert response.status_code == 404
-    assert response.json() == {'detail': "Job wasn't found 💀"}
+    assert response.json() == {'detail': f'Job Application with id 999 was not found 💀'}
 
 
 def test_update_nonexistent_job(db):
@@ -53,13 +53,13 @@ def test_update_nonexistent_job(db):
         company="Ghost Corp",
         position="No code Engineer"
     )
-
-    # Act & Assert: expect HTTPException with 404
-    with pytest.raises(HTTPException) as exc_info:
-        job_crud.update_job(db, job_id=9999, updated_data=update_info)
+    job_id = 9999
+    # Act & Assert: expect JobApplicationNotFoundException with 404
+    with pytest.raises(JobApplicationNotFoundException) as exc_info:
+        job_crud.update_job(db, job_id, updated_data=update_info)
 
     assert exc_info.value.status_code == 404
-    assert "Job wasn't found 💀" in str(exc_info.value.detail)
+    assert f'Job Application with id {job_id} was not found 💀' in str(exc_info.value.detail)
 
 
 def test_feed_schema_invalid_status(db):
