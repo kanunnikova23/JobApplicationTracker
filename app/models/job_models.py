@@ -5,6 +5,7 @@
 from sqlalchemy import Column, Integer, String, Date
 from app.db.database import Base
 from app.schemas.job_schemas import ApplicationStatus
+from app.schemas import ApplicationStatus
 from sqlalchemy import Enum as SQLEnum
 
 
