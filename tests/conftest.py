@@ -3,10 +3,10 @@ import pytest  # 🧪 Pytest framework for writing and managing tests
 from fastapi.testclient import TestClient  # 🚀 Used to simulate requests to FastAPI app in tests
 from sqlalchemy import create_engine  # ⚙️ To create a DB connection
 from sqlalchemy.orm import sessionmaker  # 🧵 For managing sessions to the DB
-from app.api.deps import get_db  # 🧩 The FastAPI dependency I override in tests
-from app.db.database import Base  # 🧱 SQLAlchemy models’ Base (used to create/drop tables)
+from app.api import get_db  # 🧩 The FastAPI dependency I override in tests
+from app.db import Base  # 🧱 SQLAlchemy models’ Base (used to create/drop tables)
 from app.main import app  # 🚀 The actual FastAPI app object being tested
-from app.models.job_models import JobApplication  # import JobApplication model
+from app.models import JobApplication  # import JobApplication model
 import datetime  # Import Python's date class to pass a date object instead of a string
 
 # # Use separate SQLite DB for testing separately from prod one
@@ -51,7 +51,7 @@ def client(db):  # 👈 db fixture is passed in, so every test gets a fresh sess
     # Patch the app so that all routes now use test DB session
     app.dependency_overrides[get_db] = override_get_db
 
-    with TestClient(app) as c:  #  Simulate HTTP requests
+    with TestClient(app) as c:  # Simulate HTTP requests
         yield c  # Provide this test client to the test
     app.dependency_overrides.clear()  # Reset dependency overrides after test
 
