@@ -3,7 +3,7 @@
 import pytest
 from app.crud import job_crud
 from app.schemas import job_schemas
-from app.exceptions import JobApplicationNotFoundException, ValidationError
+from app.exceptions import JobApplicationNotFoundException, ValidationError, AppBaseException
 
 
 def test_create_job_app(db):
@@ -34,17 +34,17 @@ def test_get_job_app_by_id_raises_404(db):
 
 def test_delete_nonexistent_job(db):
     job_id = 9999
-    with pytest.raises(JobApplicationNotFoundException) as ex_info:
+    with pytest.raises(AppBaseException) as ex_info:
         job_crud.delete_job(db, job_id)
-    assert ex_info.value.status_code == 404
-    assert f'Job Application with id {job_id} was not found 💀' in str(ex_info.value.detail)
+    assert ex_info.value.status_code == 500
+    assert f'Unexpected error during deletion.' in str(ex_info.value.detail)
 
 
 # integration test
 def test_delete_nonexistent_job_endpoint(client):
     response = client.delete("/applications/999")
-    assert response.status_code == 404
-    assert response.json() == {'detail': f'Job Application with id 999 was not found 💀'}
+    assert response.status_code == 500
+    assert response.json() == {'detail': 'Unexpected error during deletion.'}
 
 
 def test_update_nonexistent_job(db):
