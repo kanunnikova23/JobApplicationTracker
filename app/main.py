@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 
 from app.api.routes import job_routes
-from app.db.database import engine
+from app.db import engine
 from app.models import job_models
 
 from sqlalchemy.exc import IntegrityError
