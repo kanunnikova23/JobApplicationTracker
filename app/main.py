@@ -1,7 +1,7 @@
 # Starts the app. Registers routes.
 from fastapi import FastAPI
 
-from app.api.routes import job_routes
+from app.api.routes import job_routes, user_routes
 from app.db import engine
 from app.models import job_models
 
@@ -9,7 +9,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from fastapi.exceptions import RequestValidationError
 from fastapi import HTTPException
-
 
 from app.exceptions import (
     AppBaseException, generic_app_exception_handler,
@@ -28,8 +27,10 @@ def read_root():
     return {"message": "Job Application Tracker is up and running 🚀"}
 
 
-# Include the job routes under /applications
+# Include the job routes under /applications and under /users
 app.include_router(job_routes.router, prefix="/applications", tags=["Applications"])
+app.include_router(user_routes.router, prefix="/users", tags=["Users"])
+
 
 # Register custom exception handlers
 app.add_exception_handler(AppBaseException, generic_app_exception_handler)
@@ -37,3 +38,5 @@ app.add_exception_handler(HTTPException, http_exception_handler)
 app.add_exception_handler(IntegrityError, integrity_error_handler)
 app.add_exception_handler(NoResultFound, no_result_found_handler)
 app.add_exception_handler(RequestValidationError, validation_error_handler)
+
+
