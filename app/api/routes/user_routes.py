@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Body
+from fastapi import APIRouter, Depends, Body, HTTPException
 from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.schemas import user_schemas
@@ -25,6 +25,11 @@ def get_user_by_id(user_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Invalid UUID format.")
     return user
 
+
+# GET /users/username/{username} for user-friendly URLs
+@router.get("/username/{username}", response_model=user_schemas.UserBase)
+def get_user_by_username(username: str, db: Session = Depends(get_db)):
+    user = user_crud.get_user_by_username(db, username)
     return user
 
 
