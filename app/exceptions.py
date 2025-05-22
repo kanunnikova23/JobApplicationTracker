@@ -2,13 +2,13 @@ import logging
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
-from sqlalchemy.exc import IntegrityError, NoResultFound
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
 logger = logging.getLogger(__name__)  # Ensure logger is configured elsewhere
 
 
-# Base exception for the app
+# Base Exception Class
 class AppBaseException(Exception):
     status_code = 500
     detail = "Something went wrong"
@@ -20,6 +20,14 @@ class AppBaseException(Exception):
             self.detail = detail
         logger.error(f"🚨 {self.__class__.__name__}: {self.detail}")  # Consistent message
 
+
+#  Domain-Specific Exceptions
+class DuplicateUsernameException(AppBaseException):
+    def __init__(self, username: str):
+        super().__init__(
+            status_code=400,
+            detail=f"Username '{username}' is already taken 🚫"
+        )
 
 
 class DuplicateEmailException(AppBaseException):
@@ -87,3 +95,16 @@ async def validation_error_handler(request: Request, exc: ValidationError):
         status_code=422,
         content={"detail": exc.errors()}
     )
+
+
+async def fallback_exception_handler(request: Request, exc: Exception):
+    logger.exception(f"🔥 Unhandled exception at [{request.method}] {request.url} → {str(exc)}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Unexpected server error: {type(exc).__name__} - {str(exc)}"}
+    )
+
+
+async def duplicate_field_handler(request: Request, exc: AppBaseException):
+    logger.error(f"Duplicate field error: {exc.detail}")
+    return JSONResponse(status_code=409, content={"detail": exc.detail})
