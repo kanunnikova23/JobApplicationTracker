@@ -54,17 +54,18 @@ def get_user_by_id(db: Session, user_id: str):
 
 
 def delete_user(db, user_id):
+    user = get_user_by_id(db, user_id)
+    if not user:
+        raise UserNotFoundException(user_id)
     try:
-        user = get_user_by_id(db, user_id)
-        if not user:
-            raise AppBaseException(status_code=404, detail="User not found.")
         db.delete(user)
         db.commit()
         logger.info(f"🗑️ Deleted user with ID {user_id}")
         return user
     except Exception as e:
         db.rollback()
-        raise UserNotFoundException(user_id)  # Consistent with get_user_by_id
+        logger.error(f"Error deleting user {user_id}: {e}")
+        raise  # re-raise original error so you don't mask it
 
 
 def update_user(db, user_id, updated_data: schemas.UserUpdate):
