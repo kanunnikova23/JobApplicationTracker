@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker  # 🧵 For managing sessions to the DB
 from app.api import get_db  # 🧩 The FastAPI dependency I override in tests
 from app.db import Base  # 🧱 SQLAlchemy models’ Base (used to create/drop tables)
 from app.main import app  # 🚀 The actual FastAPI app object being tested
-from app.models import JobApplication  # import JobApplication model
+from app.models import JobApplication, User  # import JobApplication and User models
 import datetime  # Import Python's date class to pass a date object instead of a string
 
 # # Use separate SQLite DB for testing separately from prod one
@@ -72,3 +72,21 @@ def sample_applications(db):
     db.commit()
     db.refresh(job)  # to get the ID
     return [job]  # return it so you can use it in your tests if needed
+
+
+@pytest.fixture(scope="function")
+def sample_user(db):
+    # Create one fake job application
+    user = User(
+        email="example@gmail.com",
+        username="jared232",
+        full_name="Jared Smith",
+        role="user",
+        hashed_password="12320322dsek#€1",
+        created_at=datetime.date(2025, 5, 23),
+        last_login=created_at
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)  # to get the ID
+    return [user]  # return it so you can use it in your tests if needed

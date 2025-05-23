@@ -2,12 +2,13 @@ import logging
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
-from sqlalchemy.exc import IntegrityError, NoResultFound
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import NoResultFound
 
 logger = logging.getLogger(__name__)  # Ensure logger is configured elsewhere
 
 
-# Base exception for the app
+# Base Exception Class
 class AppBaseException(Exception):
     status_code = 500
     detail = "Something went wrong"
@@ -20,7 +21,42 @@ class AppBaseException(Exception):
         logger.error(f"🚨 {self.__class__.__name__}: {self.detail}")  # Consistent message
 
 
-#  Generic handler for any custom job exception
+#  Domain-Specific Exceptions
+class DuplicateUsernameException(AppBaseException):
+    def __init__(self, username: str):
+        super().__init__(
+            status_code=400,
+            detail=f"Username '{username}' is already taken 🚫"
+        )
+
+
+class DuplicateEmailException(AppBaseException):
+    def __init__(self, email: str):
+        super().__init__(
+            status_code=400,
+            detail=f"Email '{email}' is already taken 🚫"
+        )
+
+
+class JobApplicationNotFoundException(AppBaseException):
+    def __init__(self, application_id: int):
+        super().__init__(
+            status_code=404,
+            detail=f"Job Application with id {application_id} was not found 💀"
+        )
+
+
+class UserNotFoundException(AppBaseException):
+    def __init__(self, username: str):
+        super().__init__(
+            status_code=404,
+            detail=f"User '{username}' not found 👻"
+        )
+
+
+# Add more here as needed later (e.g., AuthException, TokenExpiredException, etc.)
+
+# Custom Exception Handlers
 async def generic_app_exception_handler(request: Request, exc: AppBaseException):
     logger.error(f"🚨 [{request.method}] {request.url} → {exc.__class__.__name__}: {exc.detail}")
     return JSONResponse(
@@ -29,16 +65,6 @@ async def generic_app_exception_handler(request: Request, exc: AppBaseException)
     )
 
 
-#  Specific custom exception — for missing job application
-class JobApplicationNotFoundException(AppBaseException):
-    def __init__(self, application_id: int):
-        msg = f"Job Application with id {application_id} was not found 💀"
-        self.application_id = application_id
-        super().__init__(status_code=404, detail=msg)
-        # No need to log here — already logged in base class
-
-
-#  Built-in compatible handlers
 async def http_exception_handler(request: Request, exc: HTTPException):
     logger.warning(f"⚠️ HTTPException at [{request.method}] {request.url} → {exc.detail}")
     return JSONResponse(
@@ -69,3 +95,16 @@ async def validation_error_handler(request: Request, exc: ValidationError):
         status_code=422,
         content={"detail": exc.errors()}
     )
+
+
+async def fallback_exception_handler(request: Request, exc: Exception):
+    logger.exception(f"🔥 Unhandled exception at [{request.method}] {request.url} → {str(exc)}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Unexpected server error: {type(exc).__name__} - {str(exc)}"}
+    )
+
+
+async def duplicate_field_handler(request: Request, exc: AppBaseException):
+    logger.error(f"Duplicate field error: {exc.detail}")
+    return JSONResponse(status_code=409, content={"detail": exc.detail})
