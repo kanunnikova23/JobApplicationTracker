@@ -55,8 +55,6 @@ def get_user_by_id(db: Session, user_id: str):
 
 def delete_user(db, user_id):
     user = get_user_by_id(db, user_id)
-    if not user:
-        raise UserNotFoundException(user_id)
     try:
         db.delete(user)
         db.commit()
@@ -83,7 +81,7 @@ def update_user(db, user_id, updated_data: schemas.UserUpdate):
             f"✏️ Updated user with ID {user_id} with fields: {list(updated_data.model_dump(exclude_unset=True).keys())}")
         #  Return the fully updated model
         return user
-    except IntegrityError as e:
+    except IntegrityError:
         db.rollback()
         raise AppBaseException(status_code=409, detail="Database integrity error during update.")
 
@@ -91,5 +89,5 @@ def update_user(db, user_id, updated_data: schemas.UserUpdate):
 def get_user_by_username(db: Session, username: str):
     user = db.query(models.User).filter(models.User.username == username).first()
     if not user:
-        return None
+        raise UserNotFoundException(username)
     return user
