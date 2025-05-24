@@ -10,6 +10,7 @@ __pycache__/
 
 # DB file(s)
 job_applications.db
+tests/test.db
 
 # Linting config
 .flake8

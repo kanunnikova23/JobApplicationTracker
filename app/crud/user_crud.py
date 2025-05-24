@@ -91,3 +91,10 @@ def get_user_by_username(db: Session, username: str):
     if not user:
         raise UserNotFoundException(username)
     return user
+
+
+def get_users(db: Session, skip: int = 0, limit: int = 100):
+    try:
+        return db.query(models.User).offset(skip).limit(limit).all()
+    except Exception:
+        raise AppBaseException(status_code=500, detail="Internal server error while fetching job applications.")

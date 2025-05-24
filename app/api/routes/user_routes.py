@@ -1,8 +1,10 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Body, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+
 from app.api.deps import get_db
+
 from app.schemas import user_schemas
 from app.crud import user_crud
 
@@ -13,6 +15,11 @@ router = APIRouter()
 @router.post("/register", response_model=user_schemas.User)
 def create_user(user: user_schemas.UserCreate, db: Session = Depends(get_db)):
     return user_crud.create_user(db, user)
+
+
+@router.get("/", response_model=list[user_schemas.User])
+def read_applications(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    return user_crud.get_users(db, skip=skip, limit=limit)
 
 
 # GET /users/{user_id} for internal logic (auth, DB operations)
