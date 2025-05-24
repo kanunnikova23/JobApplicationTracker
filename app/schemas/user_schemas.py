@@ -3,7 +3,7 @@ from enum import Enum as PyEnum
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 
 
 class UserRole(str, PyEnum):
@@ -12,7 +12,7 @@ class UserRole(str, PyEnum):
 
 
 class UserBase(BaseModel):
-    email: str = Field(..., max_length=100, description="User email")
+    email: EmailStr
     username: str = Field(..., max_length=100, description="Username")
     full_name: Optional[str] = Field(None, max_length=100, description="Full name")
     role: Optional[UserRole] = Field(default="user", description="User role")
@@ -34,7 +34,7 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(UserBase):
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
     username: Optional[str] = None
     full_name: Optional[str] = None
     role: Optional[UserRole] = None
