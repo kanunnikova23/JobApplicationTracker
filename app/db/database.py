@@ -2,7 +2,6 @@
 import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # Load environment variables from .env
@@ -20,5 +19,3 @@ engine = create_engine(
 # Session maker for handling DB sessions
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base class for SQLAlchemy models
-Base = declarative_base()
