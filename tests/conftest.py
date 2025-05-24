@@ -84,7 +84,7 @@ def sample_user(db):
         role="user",
         hashed_password="12320322dsek#€1",
         created_at=datetime.date(2025, 5, 23),
-        last_login=created_at
+        last_login=None
     )
     db.add(user)
     db.commit()
