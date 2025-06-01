@@ -1,7 +1,7 @@
 # Create fresh DB(mock) for testing (Shared Test Setup)
 import datetime  # Import Python's date class to pass a date object instead of a string
 import pytest  # Pytest framework for writing and managing tests
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 from app.api.deps import get_async_db  # The FastAPI dependency I override in tests
@@ -61,7 +61,8 @@ async def db_session():
 
 @pytest.fixture
 async def async_client():
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
 
 
