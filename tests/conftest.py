@@ -8,6 +8,7 @@ from app.api.deps import get_async_db  # The FastAPI dependency I override in te
 from app.db import Base  # SQLAlchemy models’ Base (used to create/drop tables)
 from app.main import app  # The actual FastAPI app object being tested
 from app.models import JobApplication, User  # import JobApplication and User DB models
+from sqlalchemy import delete
 
 # # Use separate SQLite DB for testing separately from prod one
 SQLALCHEMY_TEST_DB_URL = "sqlite+aiosqlite:///./test.db"
@@ -56,6 +57,10 @@ async def prepare_test_db():
 @pytest.fixture
 async def db_session():
     async with AsyncTestingSessionLocal() as session:
+        # Clear tables for test isolation
+        await session.execute(delete(JobApplication))
+        await session.execute(delete(User))
+        await session.commit()
         yield session
 
 
