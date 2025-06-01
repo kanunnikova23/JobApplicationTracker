@@ -58,7 +58,7 @@ async def delete_user(db: AsyncSession, user_id: str):
         user = await fetch_user(db, select(models.User).where(models.User.id == user_id))
         if not user:
             raise UserNotFoundException
-        db.delete(user)
+        await db.delete(user)
         await db.commit()
         logger.info(f"🗑️ Deleted user with ID {user_id}")
         return user
