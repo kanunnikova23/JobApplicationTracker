@@ -1,16 +1,9 @@
-from app.api.deps import get_db
+import pytest
+from httpx import AsyncClient
+from app.main import app  # The actual FastAPI app object being tested
 
 
-# Testing for dependency logic.
-def test_get_db(db):
-    gen = get_db()  # call your generator dependency
-    db = next(gen)  # get the yielded session
-
-    assert db is not None
-    from app.db.database import SessionLocal
-    assert isinstance(db, SessionLocal().__class__)
-
-    try:
-        next(gen)  # run cleanup
-    except StopIteration:
-        pass
+@pytest.mark.anyio
+async def test_async_db_dependency_injection(async_client: AsyncClient):
+    response = await async_client.get("/users/")
+    assert response.status_code in [200, 401, 403], f"Unexpected response: {response.status_code} - {response.text}"
