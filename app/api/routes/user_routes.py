@@ -8,7 +8,6 @@ from app.schemas import user_schemas
 from app.crud import user_crud
 
 router = APIRouter(
-    prefix="/users",
     tags=["Users"]
 )
 

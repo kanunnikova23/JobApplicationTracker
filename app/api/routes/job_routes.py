@@ -5,7 +5,6 @@ from app.api.deps import get_async_db
 from app.schemas import job_schemas
 
 router = APIRouter(
-    prefix="/applications",
     tags=["Applications"]
 )
 
