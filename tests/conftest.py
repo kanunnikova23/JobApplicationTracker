@@ -27,7 +27,7 @@ AsyncTestingSessionLocal = async_sessionmaker(
 
 
 # anyio_backend: Required by pytest-anyio to work with asyncio
-@pytest.fixture
+@pytest.fixture(scope="session")
 def anyio_backend():
     return 'asyncio'
 
