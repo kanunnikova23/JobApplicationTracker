@@ -1,53 +1,62 @@
 # unit tests for database logic
 # CRUD Logic (No FastAPI involved)
 import pytest
+from sqlalchemy import delete
+
 from app.crud import job_crud
+from app.models import job_models
 from app.schemas import job_schemas
 from app.exceptions import JobApplicationNotFoundException, ValidationError, AppBaseException
 
 
-def test_create_job_app(db):
+@pytest.mark.anyio
+async def test_create_job_app(db_session):
     job = job_schemas.JobAppCreate(
         company="OpenAI",
         position="Backend Engineer",
         status="applied",
         applied_date="2024-01-01"
     )
-    result = job_crud.create_job_app(db, job)
+    result = await job_crud.create_job_app(db_session, job)
     assert result.company == "OpenAI"
     assert result.status == "applied"
 
 
-def test_get_job_apps_empty(db):
-    apps = job_crud.get_job_apps(db)
+@pytest.mark.anyio
+async def test_get_job_apps_empty(db_session):
+    apps = await job_crud.get_job_apps(db_session)
     assert apps == []
 
 
-def test_get_job_app_by_id_raises_404(db):
+@pytest.mark.anyio
+async def test_get_job_app_by_id_raises_404(db_session):
     job_id = 9999
     # Try to get a job application with an ID that doesn't exist
     with pytest.raises(JobApplicationNotFoundException) as exc_info:
-        job_crud.get_job_app_by_id(db, job_id)
+        await job_crud.get_job_app_by_id(db_session, job_id)
     assert exc_info.value.status_code == 404
     assert f'Job Application with id {job_id} was not found 💀' in exc_info.value.detail
 
 
-def test_delete_nonexistent_job(db):
+@pytest.mark.anyio
+async def test_delete_nonexistent_job(db_session):
     job_id = 9999
     with pytest.raises(AppBaseException) as ex_info:
-        job_crud.delete_job(db, job_id)
+        await job_crud.delete_job(db_session, job_id)
     assert ex_info.value.status_code == 500
     assert f'Unexpected error during deletion.' in str(ex_info.value.detail)
 
 
 # integration test
-def test_delete_nonexistent_job_endpoint(client):
-    response = client.delete("/applications/999")
+@pytest.mark.anyio
+async def test_delete_nonexistent_job_endpoint(async_client):
+    response = await async_client.delete("/applications/999")
     assert response.status_code == 500
     assert response.json() == {'detail': 'Unexpected error during deletion.'}
 
 
-def test_update_nonexistent_job(db):
+@pytest.mark.anyio
+async def test_update_nonexistent_job(db_session):
     # Create a fake update payload
     update_info = job_schemas.JobAppUpdate(
         company="Ghost Corp",
@@ -56,18 +65,19 @@ def test_update_nonexistent_job(db):
     job_id = 9999
     # Act & Assert: expect JobApplicationNotFoundException with 404
     with pytest.raises(JobApplicationNotFoundException) as exc_info:
-        job_crud.update_job(db, job_id, updated_data=update_info)
+        await job_crud.update_job(db_session, job_id, updated_data=update_info)
 
     assert exc_info.value.status_code == 404
     assert f'Job Application with id {job_id} was not found 💀' in str(exc_info.value.detail)
 
 
-def test_feed_schema_invalid_status(db):
+@pytest.mark.anyio
+async def test_feed_schema_invalid_status(db_session):
     with pytest.raises(ValidationError) as ex_info:
         job_schemas.JobAppCreate(
             company="Google",
             position="Backend Engineer",
-            status="ghosted",  # 🚫 invalid status
+            status="ghosted",  # invalid status
             applied_date="2025-05-10"
         )
 
