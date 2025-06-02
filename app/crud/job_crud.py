@@ -50,7 +50,7 @@ async def delete_job(db: AsyncSession, job_id: int):
         job = await fetch_one(db, select(models.JobApplication).where(models.JobApplication.id == job_id))
         if not job:
             raise JobApplicationNotFoundException(job_id)
-        db.delete(job)
+        await db.delete(job)
         await db.commit()
         logger.info(f"🗑️ Deleted job ID {job_id}")
         return job
@@ -64,6 +64,7 @@ async def update_job(db: AsyncSession, job_id: int, updated_data: schemas.JobApp
     try:
         #  Fetch the job entry from the database
         job = await get_job_app_by_id(db, job_id)
+
         update_fields = updated_data.model_dump(exclude_unset=True)
 
         #  Update only the fields that were actually passed in the request
@@ -77,9 +78,14 @@ async def update_job(db: AsyncSession, job_id: int, updated_data: schemas.JobApp
             f"✏️ Updated job ID {job_id} with fields: {list(update_fields.keys())}")
         #  Return the fully updated model
         return job
+
+    except JobApplicationNotFoundException as e:
+        raise e
+
     except IntegrityError:
         await db.rollback()
         raise AppBaseException(status_code=409, detail="Database integrity error during update.")
+
     except Exception:
         await db.rollback()
         raise AppBaseException(status_code=500, detail="Unexpected error during update.")
