@@ -11,7 +11,7 @@ from app.models import JobApplication, User  # import JobApplication and User DB
 from sqlalchemy import delete
 
 # # Use separate SQLite DB for testing separately from prod one
-SQLALCHEMY_TEST_DB_URL = "sqlite+aiosqlite:///./test.db"
+SQLALCHEMY_TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 
 # Create engine that connects to the test DB
 # "check_same_thread=False" is needed because SQLite is single-threaded by default
