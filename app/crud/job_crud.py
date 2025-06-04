@@ -44,6 +44,40 @@ async def get_job_apps(db: AsyncSession, skip: int = 0, limit: int = 100):
         raise AppBaseException(status_code=500, detail="Internal server error while fetching job applications.")
 
 
+async def filter_job_apps(
+        db: AsyncSession,
+        company: str | None = None,
+        status: str | None = None,
+        sort_by: str = "applied_date",
+        order: str = "desc",
+        skip: int = 0,
+        limit: int = 10,
+):
+    try:
+        query = select(models.JobApplication)
+
+        if company:
+            query = query.filter(models.JobApplication.company.ilike(f"%{company}%"))
+
+        if status:
+            query = query.filter(models.JobApplication.status == status)
+
+        # Dynamic ordering
+        sort_column = getattr(models.JobApplication, sort_by, models.JobApplication.applied_date)
+        if order == "desc":
+            sort_column = sort_column.desc()
+
+        query = query.order_by(sort_column).offset(skip).limit(limit)
+
+        result = await db.execute(query)
+        logger.info(f"🔍 Filtered jobs fetched with skip={skip}, limit={limit}, sort_by={sort_by}, order={order}")
+        return result.scalars().all()
+
+    except Exception as e:
+        logger.error(f"❌ Error filtering jobs: {e}")
+        raise AppBaseException(status_code=500, detail="Internal server error while filtering job applications.")
+
+
 # Delete a job by ID
 async def delete_job(db: AsyncSession, job_id: int):
     try:
