@@ -122,3 +122,41 @@ async def test_delete_job_application_by_id(async_client, db_session):
     )
     deleted_job = result.scalar_one_or_none()
     assert deleted_job is None
+
+
+@pytest.mark.anyio
+async def test_filter_by_company(async_client, db_session):
+    response = await async_client.get("/applications/filter?company=Apple")
+    assert response.status_code == 200
+    data = response.json()
+    assert all("Apple" in job["company"] for job in data)
+
+
+@pytest.mark.anyio
+async def test_filter_by_status(async_client, db_session):
+    response = await async_client.get("/applications/filter?status=applied")
+    assert response.status_code == 200
+    assert all(job["status"] == "applied" for job in response.json())
+
+
+@pytest.mark.anyio
+async def test_sort_by_applied_date_desc(async_client, db_session):
+    response = await async_client.get("/applications/filter?sort_by=applied_date&order=desc")
+    dates = [job["applied_date"] for job in response.json()]
+    assert dates == sorted(dates, reverse=True)
+
+
+@pytest.mark.anyio
+async def test_sort_by_applied_date_asc(async_client, db_session):
+    response = await async_client.get("/applications/filter?sort_by=applied_date&order=asc")
+    dates = [job["applied_date"] for job in response.json()]
+    assert dates == sorted(dates)
+
+
+@pytest.mark.anyio
+async def test_pagination_limit_and_skip(async_client, db_session, sample_applications):
+    response = await async_client.get("/applications/filter?skip=2&limit=2")
+    data = response.json()
+    assert len(data) <= 2
+    assert len(data) == 2
+
