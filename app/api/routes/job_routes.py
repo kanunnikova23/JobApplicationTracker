@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, Body, Response
+from typing import Optional
+
+from fastapi import APIRouter, Depends, Body, Response, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.crud import job_crud
 from app.api.deps import get_async_db
@@ -19,8 +21,27 @@ async def read_applications(skip: int = 0, limit: int = 10, db: AsyncSession = D
     return await job_crud.get_job_apps(db, skip=skip, limit=limit)
 
 
-@router.get("/{id}", response_model=job_schemas.JobApp)
 @router.get("/filter", response_model=list[job_schemas.JobAppOut])
+async def filter_job_apps(
+        company: Optional[str] = Query(None),
+        status: Optional[str] = Query(None),
+        sort_by: str = Query("applied_date", regex="^(applied_date|updated_at|status)$"),
+        order: str = Query("desc", regex="^(asc|desc)$"),
+        skip: int = Query(0, ge=0),
+        limit: int = Query(10, ge=1, le=100),
+        db: AsyncSession = Depends(get_async_db)
+):
+    return await job_crud.filter_job_apps(
+        db=db,
+        company=company,
+        status=status,
+        sort_by=sort_by,
+        order=order,
+        skip=skip,
+        limit=limit
+    )
+
+
 @router.get("/{id}", response_model=job_schemas.JobAppOut)
 async def read_jobs_by_id(id: int, db: AsyncSession = Depends(get_async_db)):
     job_app = await job_crud.get_job_app_by_id(db, id)
