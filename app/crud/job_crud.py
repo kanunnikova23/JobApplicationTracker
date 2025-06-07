@@ -1,6 +1,6 @@
 # Contains DB logic.
 
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -52,20 +52,32 @@ async def filter_job_apps(
         order: str = "desc",
         skip: int = 0,
         limit: int = 10,
+        search_query: str | None = None
 ):
     try:
         query = select(models.JobApplication)
 
         if company:
             query = query.filter(models.JobApplication.company.ilike(f"%{company}%"))
-
         if status:
             query = query.filter(models.JobApplication.status == status)
 
+        if search_query:
+            query = query.filter(
+                or_(
+                    models.JobApplication.position.ilike(f"%{search_query}%"),
+                    models.JobApplication.company.ilike(f"%{search_query}%"),
+                    models.JobApplication.notes.ilike(f"%{search_query}%")
+                )
+            )
+
         # Dynamic ordering
         sort_column = getattr(models.JobApplication, sort_by, models.JobApplication.applied_date)
+
         if order == "desc":
             sort_column = sort_column.desc()
+        else:
+            sort_column = sort_column.asc()
 
         query = query.order_by(sort_column).offset(skip).limit(limit)
 
