@@ -1,3 +1,5 @@
+import pytest
+
 from app.models import User
 from datetime import datetime
 from uuid import uuid4
@@ -5,26 +7,29 @@ from uuid import uuid4
 USER_PREFIX = "users"
 
 
-def test_read_applications_route(client):
-    response = client.get("/users/")
+@pytest.mark.anyio
+async def test_read_applications_route(async_client):
+    response = await async_client.get("/users/")
     assert response.status_code == 200
 
 
-def test_register_user(client):
+@pytest.mark.anyio
+async def test_register_user(async_client):
     payload = {
         "email": "testuser@example.com",
         "username": "testuser",
         "full_name": "Test User",
         "password": "securepass123"
     }
-    response = client.post(f"{USER_PREFIX}/register", json=payload)
-    assert response.status_code == 200
+    response = await async_client.post(f"{USER_PREFIX}/register", json=payload)
+    assert response.status_code == 201
     data = response.json()
     assert data["email"] == payload["email"]
     assert data["username"] == payload["username"]
 
 
-def test_register_duplicate_email(client, db):
+@pytest.mark.anyio
+async def test_register_duplicate_email(async_client, db_session):
     existing_user = User(
         id=str(uuid4()),
         email="dupe@example.com",
@@ -33,8 +38,8 @@ def test_register_duplicate_email(client, db):
         hashed_password="hashed",
         created_at=datetime.now()
     )
-    db.add(existing_user)
-    db.commit()
+    db_session.add(existing_user)
+    await db_session.commit()
 
     payload = {
         "email": "dupe@example.com",
@@ -42,18 +47,20 @@ def test_register_duplicate_email(client, db):
         "full_name": "Another User",
         "password": "pass"
     }
-    response = client.post(f"{USER_PREFIX}/register", json=payload)
+    response = await async_client.post(f"{USER_PREFIX}/register", json=payload)
     assert response.status_code == 409
     assert "Email" in response.json()["detail"]
 
 
-def test_get_users(client):
-    response = client.get(f"{USER_PREFIX}/")
+@pytest.mark.anyio
+async def test_get_users(async_client):
+    response = await async_client.get(f"{USER_PREFIX}/")
     assert response.status_code == 200
     assert isinstance(response.json(), list)
 
 
-def test_get_user_by_id(client, db):
+@pytest.mark.anyio
+async def test_get_user_by_id(async_client, db_session):
     user = User(
         id=str(uuid4()),
         email="idtest@example.com",
@@ -62,22 +69,24 @@ def test_get_user_by_id(client, db):
         hashed_password="hash",
         created_at=datetime.now()
     )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
 
-    response = client.get(f"{USER_PREFIX}/{user.id}")
+    response = await async_client.get(f"{USER_PREFIX}/{user.id}")
     assert response.status_code == 200
     assert response.json()["email"] == user.email
 
 
-def test_get_user_by_invalid_uuid(client):
-    response = client.get(f"{USER_PREFIX}/invalid-uuid")
+@pytest.mark.anyio
+async def test_get_user_by_invalid_uuid(async_client):
+    response = await async_client.get(f"{USER_PREFIX}/invalid-uuid")
     assert response.status_code == 400
     assert "Invalid UUID" in response.json()["detail"]
 
 
-def test_get_user_by_username(client, db):
+@pytest.mark.anyio
+async def test_get_user_by_username(async_client, db_session):
     user = User(
         id=str(uuid4()),
         email="usertest@example.com",
@@ -86,15 +95,16 @@ def test_get_user_by_username(client, db):
         hashed_password="hash",
         created_at=datetime.now()
     )
-    db.add(user)
-    db.commit()
+    db_session.add(user)
+    await db_session.commit()
 
-    response = client.get(f"{USER_PREFIX}/username/{user.username}")
+    response = await async_client.get(f"{USER_PREFIX}/username/{user.username}")
     assert response.status_code == 200
     assert response.json()["username"] == user.username
 
 
-def test_update_user(client, db):
+@pytest.mark.anyio
+async def test_update_user(async_client, db_session):
     user = User(
         id=str(uuid4()),
         email="updateuser@example.com",
@@ -103,21 +113,22 @@ def test_update_user(client, db):
         hashed_password="hash",
         created_at=datetime.now()
     )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
 
     update_payload = {
         "full_name": "Updated Name",
         "role": "admin"
     }
-    response = client.put(f"{USER_PREFIX}/{user.id}", json=update_payload)
+    response = await async_client.put(f"{USER_PREFIX}/{user.id}", json=update_payload)
     assert response.status_code == 200
     assert response.json()["full_name"] == "Updated Name"
     assert response.json()["role"] == "admin"
 
 
-def test_delete_user(client, db):
+@pytest.mark.anyio
+async def test_delete_user(async_client, db_session):
     user = User(
         id=str(uuid4()),
         email="delete@example.com",
@@ -126,13 +137,13 @@ def test_delete_user(client, db):
         hashed_password="hash",
         created_at=datetime.now()
     )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
 
-    response = client.delete(f"{USER_PREFIX}/{user.id}")
+    response = await async_client.delete(f"{USER_PREFIX}/{user.id}")
     assert response.status_code == 204
 
     # Confirm it's deleted
-    get_response = client.get(f"{USER_PREFIX}/{user.id}")
+    get_response = await async_client.get(f"{USER_PREFIX}/{user.id}")
     assert get_response.status_code == 404

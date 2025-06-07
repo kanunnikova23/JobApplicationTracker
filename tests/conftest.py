@@ -1,81 +1,136 @@
 # Create fresh DB(mock) for testing (Shared Test Setup)
-import pytest  # 🧪 Pytest framework for writing and managing tests
-from fastapi.testclient import TestClient  # 🚀 Used to simulate requests to FastAPI app in tests
-from sqlalchemy import create_engine  # ⚙️ To create a DB connection
-from sqlalchemy.orm import sessionmaker  # 🧵 For managing sessions to the DB
-from app.api import get_db  # 🧩 The FastAPI dependency I override in tests
-from app.db import Base  # 🧱 SQLAlchemy models’ Base (used to create/drop tables)
-from app.main import app  # 🚀 The actual FastAPI app object being tested
-from app.models import JobApplication, User  # import JobApplication and User models
 import datetime  # Import Python's date class to pass a date object instead of a string
+import pytest  # Pytest framework for writing and managing tests
+from httpx import AsyncClient, ASGITransport
+from sqlalchemy import delete
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
-# # Use separate SQLite DB for testing separately from prod one
-SQLALCHEMY_TEST_DB_URL = "sqlite:///./test.db"
+from app.api.deps import get_async_db  # The FastAPI dependency I override in tests
+from app.db import Base  # SQLAlchemy models’ Base (used to create/drop tables)
+from app.main import app  # The actual FastAPI app object being tested
+from app.models import JobApplication, User  # import JobApplication and User DB models
+
+# Use separate SQLite DB for testing separately from prod one
+SQLALCHEMY_TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 
 # Create engine that connects to the test DB
 # "check_same_thread=False" is needed because SQLite is single-threaded by default
-engine = create_engine(SQLALCHEMY_TEST_DB_URL, connect_args={"check_same_thread": False})
-
-# Create a session factory bound to this test engine
+engine = create_async_engine(
+    SQLALCHEMY_TEST_DB_URL,
+    connect_args={"check_same_thread": False}
+)
+# Create a session factory bound to this test engine (used for test sessions)
 # autocommit=False, autoflush=False = better control over transactions
-TestingSessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+AsyncTestingSessionLocal = async_sessionmaker(
+    bind=engine,
+    expire_on_commit=False,
+    class_=AsyncSession)
 
 
-@pytest.fixture(scope="function")
-def db():
-    # 1. Setup: create all tables fresh in the test DB engine
-    Base.metadata.create_all(bind=engine)  # engine is the test engine, not prod
+# anyio_backend: Required by pytest-anyio to work with asyncio
+@pytest.fixture(scope="session")
+def anyio_backend():
+    return 'asyncio'
 
-    # Create a session to talk to this fresh test DB
-    session = TestingSessionLocal()
 
-    # 2. Yield: hand over the session for test to use
-    try:
-        # 🎯 Provide this DB session to tests via yield
+# 🔁 Override the actual get_async_db dependency with test DB
+async def override_get_async_db():
+    async with AsyncTestingSessionLocal() as session:
         yield session
-    finally:
-        # 3. Teadrown: close the session and drop all tables (clean state)
-        session.close()
-        Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture(scope="module", autouse=True)
+async def set_dependency_override():
+    app.dependency_overrides[get_async_db] = override_get_async_db
+
+
+# 🏗️ Create schema for testing -  Create + Drop tables before/after test session
+@pytest.fixture(scope="session", autouse=True)
+async def prepare_test_db():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)  # Create tables
+    yield
+    # Optionally tear down
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+
+
+@pytest.fixture
+async def db_session():
+    async with AsyncTestingSessionLocal() as session:
+        # Clear tables for test isolation
+        await session.execute(delete(JobApplication))
+        await session.execute(delete(User))
+        await session.commit()
+        yield session
+
+
+@pytest.fixture
+async def async_client():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        yield client
 
 
 @pytest.fixture(scope="function")
-def client(db):  # 👈 db fixture is passed in, so every test gets a fresh session
-    # This overrides the normal FastAPI DB dependency with the test session
-    def override_get_db():
-        try:
-            yield db  # 🔁 Yield the test session instead of the real one
-        finally:
-            pass
+async def sample_applications(db_session: AsyncSession):
+    base_date = datetime.date(2025, 4, 1)
 
-    # Patch the app so that all routes now use test DB session
-    app.dependency_overrides[get_db] = override_get_db
+    jobs = [
+        JobApplication(
+            company="TestCompany",
+            position="Backend Developer",
+            location="Cork",
+            status="applied",
+            applied_date=base_date,
+            link="https://apple.com/job",
+            notes="Excited for this role"
+        ),
+        JobApplication(
+            company="Google",
+            position="Frontend Engineer",
+            location="Dublin",
+            status="rejected",
+            applied_date=base_date + datetime.timedelta(days=1),
+            link="https://google.com/job",
+            notes="Already rejected, oof"
+        ),
+        JobApplication(
+            company="Amazon",
+            position="DevOps Specialist",
+            location="Remote",
+            status="interviewing",
+            applied_date=base_date + datetime.timedelta(days=2),
+            link="https://amazon.com/job",
+            notes="Interviewing next week"
+        ),
+        JobApplication(
+            company="Meta",
+            position="Data Analyst",
+            location="London",
+            status="offered",
+            applied_date=base_date + datetime.timedelta(days=3),
+            link="https://meta.com/job",
+            notes="Offer pending"
+        ),
+        JobApplication(
+            company="Netflix",
+            position="SRE",
+            location="Berlin",
+            status="withdrawn",
+            applied_date=base_date + datetime.timedelta(days=4),
+            link="https://netflix.com/job",
+            notes="Withdrawn after interview"
+        ),
+    ]
 
-    with TestClient(app) as c:  # Simulate HTTP requests
-        yield c  # Provide this test client to the test
-    app.dependency_overrides.clear()  # Reset dependency overrides after test
+    db_session.add_all(jobs)
+    await db_session.commit()
+    return jobs
 
 
 @pytest.fixture(scope="function")
-def sample_applications(db):
-    # Create one fake job application
-    job = JobApplication(
-        company="TestCompany",
-        position="Python Developer",
-        location="Remote",
-        status="applied",
-        applied_date=datetime.date(2025, 1, 1),
-        link="http://example.com",
-        notes="FastAPI FTW"
-    )
-    db.add(job)
-    db.commit()
-    db.refresh(job)  # to get the ID
-    return [job]  # return it so you can use it in your tests if needed
-
-
-@pytest.fixture(scope="function")
-def sample_user(db):
+async def sample_user(db_session):
     # Create one fake job application
     user = User(
         email="example@gmail.com",
@@ -86,7 +141,7 @@ def sample_user(db):
         created_at=datetime.date(2025, 5, 23),
         last_login=None
     )
-    db.add(user)
-    db.commit()
-    db.refresh(user)  # to get the ID
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)  # to get the ID
     return [user]  # return it so you can use it in your tests if needed
