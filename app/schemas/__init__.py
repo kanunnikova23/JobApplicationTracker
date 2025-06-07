@@ -1,7 +1,7 @@
-from .job_schemas import JobAppBase, JobAppCreate, JobApp, JobAppUpdate, ApplicationStatus
+from .job_schemas import JobAppBase, JobAppCreate, JobAppOut, JobAppUpdate, ApplicationStatus
 from .user_schemas import UserRole
 
 __all__ = [
-    "JobAppBase", "JobAppCreate", "JobApp",
+    "JobAppBase", "JobAppCreate", "JobAppOut",
     "JobAppUpdate", "ApplicationStatus", "UserRole"
 ]

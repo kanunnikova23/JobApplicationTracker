@@ -35,7 +35,7 @@ class JobAppCreate(JobAppBase):
 
 
 # Schema for outgoing data (GET)
-class JobApp(JobAppBase):
+class JobAppOut(JobAppBase):
     id: int
 
     model_config = {
