@@ -29,7 +29,8 @@ async def filter_job_apps(
         order: str = Query("desc", regex="^(asc|desc)$"),
         skip: int = Query(0, ge=0),
         limit: int = Query(10, ge=1, le=100),
-        db: AsyncSession = Depends(get_async_db)
+        db: AsyncSession = Depends(get_async_db),
+        search_query: Optional[str] = Query(None, alias="q")
 ):
     return await job_crud.filter_job_apps(
         db=db,
@@ -38,7 +39,8 @@ async def filter_job_apps(
         sort_by=sort_by,
         order=order,
         skip=skip,
-        limit=limit
+        limit=limit,
+        search_query=search_query
     )
 
 
