@@ -160,3 +160,12 @@ async def test_pagination_limit_and_skip(async_client, db_session, sample_applic
     assert len(data) <= 2
     assert len(data) == 2
 
+
+@pytest.mark.anyio
+async def test_filter_jobs_by_search_query(async_client, sample_applications):
+    response = await async_client.get("/applications/filter?q=Google")
+    assert response.status_code == 200
+    data = response.json()
+    assert all("google" in app["company"].lower() or "google" in app["position"].lower() or "google" in app.get("notes",
+                                                                                                                "").lower()
+               for app in data)
